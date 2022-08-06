@@ -27,7 +27,7 @@
 			</div>
 			
 		    <div class="content">
-				<c:if test="${not (sessionScope.user eq 'active')}">
+		    		<c:if test="${not (sessionScope.user eq 'active')}">
 				<c:if test="${not (sessionScope.registered_user eq 'registered')}">														
 				     <c:import url="/WEB-INF/pages/tiles/guestInfo.jsp" />
 				</c:if>							

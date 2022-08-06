@@ -5,7 +5,6 @@ import com.google.common.base.Objects;
 import by.itacademy.matveenko.jd2.bean.NewUserInfo;
 
 public class NewUserInfo {	
-	private Integer id;
 	private String userName;
     private String userSurname;
     private String email;
@@ -32,14 +31,6 @@ public class NewUserInfo {
         this.login = login;
         this.password = password;
         this.role = role;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public String getUserName() {
@@ -95,13 +86,13 @@ public class NewUserInfo {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         NewUserInfo that = (NewUserInfo) obj;
-        return Objects.equal(id, that.id) && Objects.equal(userName, that.userName) && Objects.equal(userSurname, that.userSurname) && Objects.equal(email, that.email)
+        return Objects.equal(userName, that.userName) && Objects.equal(userSurname, that.userSurname) && Objects.equal(email, that.email)
         	   && Objects.equal(login, that.login) && Objects.equal(password, that.password) && Objects.equal(role, that.role);
     }
     
     @Override
 	public int hashCode() {
-		return Objects.hashCode(id, userName, userSurname, email, login, password, role);
+		return Objects.hashCode(userName, userSurname, email, login, password, role);
 	}
 
 	@Override

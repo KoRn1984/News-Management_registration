@@ -4,6 +4,8 @@ import java.io.IOException;
 import by.itacademy.matveenko.jd2.service.IUserService;
 import by.itacademy.matveenko.jd2.bean.ConnectorStatus;
 import by.itacademy.matveenko.jd2.controller.Command;
+import by.itacademy.matveenko.jd2.controller.JspPageName;
+import by.itacademy.matveenko.jd2.controller.RequestParameterName;
 import by.itacademy.matveenko.jd2.service.ServiceException;
 import by.itacademy.matveenko.jd2.service.ServiceProvider;
 import jakarta.servlet.ServletException;
@@ -14,15 +16,12 @@ public class DoSignIn implements Command {
 
 	private final IUserService service = ServiceProvider.getInstance().getUserService();
 
-	private static final String JSP_LOGIN_PARAM = "login";
-	private static final String JSP_PASSWORD_PARAM = "password";	
-
 	@Override
 	public void execute(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String login;
 		String password;
-		login = request.getParameter(JSP_LOGIN_PARAM);
-		password = request.getParameter(JSP_PASSWORD_PARAM);	
+		login = request.getParameter(RequestParameterName.JSP_LOGIN_PARAM);
+		password = request.getParameter(RequestParameterName.JSP_PASSWORD_PARAM);	
 
 		// small validation
 		try {
@@ -38,6 +37,7 @@ public class DoSignIn implements Command {
 			}			
 		} catch (ServiceException e) {
 			e.printStackTrace();
+			response.sendRedirect(JspPageName.INDEX_PAGE);
 		}		
 	}
 }

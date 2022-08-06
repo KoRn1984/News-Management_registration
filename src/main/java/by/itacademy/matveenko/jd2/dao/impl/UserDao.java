@@ -1,114 +1,77 @@
 package by.itacademy.matveenko.jd2.dao.impl;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
-import by.itacademy.matveenko.jd2.bean.UserRole;
-import by.itacademy.matveenko.jd2.dao.SQLDataBase;
-import by.itacademy.matveenko.jd2.service.ServiceException;
 import by.itacademy.matveenko.jd2.bean.NewUserInfo;
 import by.itacademy.matveenko.jd2.dao.DaoException;
 import by.itacademy.matveenko.jd2.dao.IUserDao;
+import by.itacademy.matveenko.jd2.dao.connectionpool.ConnectionPool;
+import by.itacademy.matveenko.jd2.dao.connectionpool.ConnectionPoolException;
 
 public class UserDao implements IUserDao{
-	
-	private SQLDataBase dataBase = SQLDataBase.getInstance ();	
-		 
-	public boolean isSQLDataBase (String login, String password) throws DaoException {
-		boolean result = false;
-		try {
-        if (dataBase == null) {            
-                throw new SQLException("Database not available!");
-            } else {
-           		 result = true;
-           	 }
-            return result;
-			}catch(SQLException e) {
-				throw new DaoException(e);
-		}       
-	}
-	
-	@Override
-	public boolean logination(String login, String password) throws DaoException {
-		boolean result = false;
-		
-		if (isSQLDataBase (login, password)) {
-			for (NewUserInfo user : dataBase.getDataBase()) {
-				if (user.getLogin().equals(login) && user.getPassword().equals(password)) {
-					result = true;
-					}
-			}
-		}			  
-		return result;		
-	}
-		
-	@Override
-	public String getUserRole(String login, String password) throws DaoException {
-    	String role = UserRole.GUEST;
-    	if (logination(login, password)) {
-			for (NewUserInfo user : dataBase.getDataBase()) {
-				if (user.getLogin().equals(login)) {
-				role = user.getRole();
-				}
-			}			
-		}
-		return role;
-	}
-	
-	@Override
-	public boolean registration(NewUserInfo user) throws DaoException, ServiceException  {
-		boolean result = false;
-		
-		if (!isUserAlreadyRegistered (user)) {
-			if (isLoginNotUsed (user) && isEmailNotlUsed (user)) {
-			    addDataBase (user);
-			    
-			    result = true;
-			}						
-		}						
-		return result;        
-	}
-	
-	public SQLDataBase addDataBase (NewUserInfo user) {
-		dataBase.getDataBase().add(user);
-		System.out.println (dataBase);
-	   	return dataBase;
-    }	
-	
-	private boolean isUserAlreadyRegistered (NewUserInfo user) {
-		boolean result = true;
-		for (NewUserInfo registredUsers : dataBase.getDataBase()) {
-		if (!user.equals(registredUsers)) {
-			result = false;
-		    }
-		}
-		return result;				
-	}
+	private int roleId;
+    private String role;
 
-	public boolean isLoginNotUsed (NewUserInfo user) throws ServiceException {
-		boolean result = true;
-		
-		for (NewUserInfo userRegistered : dataBase.getDataBase()) {
-			if (user.getLogin().equals(userRegistered.getLogin())) {
-				result = false;
-				break;
-            } else {
-            	throw new ServiceException("Login already used!");   			  
-   		   }
-        }	
-	      return result;
-	}
-	
-	public boolean isEmailNotlUsed (NewUserInfo user) throws ServiceException {
-		boolean result = true;
-		
-		for (NewUserInfo userRegistered : dataBase.getDataBase()) {
-			if (user.getEmail().equals(userRegistered.getEmail())) {
-				result = false;
-				break;
-				} else {
-					throw new ServiceException("Email already used!");
-					}
+    @Override
+    public boolean logination(String login, String password) throws DaoException {
+        String sql = "SELECT * FROM users WHERE login=? AND password=?";
+        try (Connection connection = ConnectionPool.getInstance().takeConnection();
+            PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, login);
+            ps.setString(2, password);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    roleId = rs.getInt("roles_id");
+                    setUserRole(connection, roleId);
+                    return true;
                 }
-		return result;
-	}
+            }
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        } catch (ConnectionPoolException e) {
+            throw new DaoException(e);
+        }
+        return false;
+    }
+
+    private void setUserRole(Connection connection, int roleId) throws SQLException {
+        String sql = "SELECT * FROM roles WHERE id=" + roleId;
+        try (Statement st = connection.createStatement();
+             ResultSet rs = st.executeQuery(sql);) {
+            if (rs.next()) {
+                role = rs.getString("title");
+            }
+        }
+    }
+
+    @Override
+    public String getUserRole(String login, String password) {
+        if (role != null) {
+            return role;
+        }
+        return "guest";
+    }
+
+    @Override
+    public boolean registration(NewUserInfo user) throws DaoException {
+        String sql = "INSERT INTO users(login, password, name, surname, email) values (?,?,?,?,?)";
+        try (Connection connection = ConnectionPool.getInstance().takeConnection();
+            PreparedStatement ps = connection.prepareStatement(sql)) {
+        	ps.setString(1, user.getLogin());
+            ps.setString(2, user.getPassword());
+            ps.setString(3, user.getUserName());
+            ps.setString(4, user.getUserSurname());
+            ps.setString(5, user.getEmail());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            return false;
+        } catch (ConnectionPoolException e) {
+            throw new DaoException(e);
+        }
+        return true;
+    }
 }
