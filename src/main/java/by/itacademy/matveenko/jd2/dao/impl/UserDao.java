@@ -25,7 +25,7 @@ public class UserDao implements IUserDao{
             ps.setString(2, password);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    roleId = rs.getInt("roles_id");
+                    roleId = rs.getInt("role");
                     setUserRole(connection, roleId);
                     return true;
                 }
@@ -43,7 +43,7 @@ public class UserDao implements IUserDao{
         try (Statement st = connection.createStatement();
              ResultSet rs = st.executeQuery(sql);) {
             if (rs.next()) {
-                role = rs.getString("title");
+                role = rs.getString("role");
             }
         }
     }
